@@ -14,6 +14,61 @@ namespace DatabaseLibrary
       SeedRecordTable();
     }
 
+    public bool CreateHabit()
+    {
+      Console.Clear();
+      Console.WriteLine("Enter a name of your habit (running, meditating, reading, swimming, etc.):\n");
+      string? name = Console.ReadLine();
+
+      while (string.IsNullOrEmpty(name))
+      {
+        Console.WriteLine("\nName can't be blank.\n");
+        name = Console.ReadLine();
+      }
+
+      Console.WriteLine("\nEnter a measurement unit for your habit (kilometers, times, pages, minutes, etc.):\n");
+      string? unit = Console.ReadLine();
+
+      while (string.IsNullOrEmpty(unit))
+      {
+        Console.WriteLine("\nUnit can't be blank.\n");
+        unit = Console.ReadLine();
+      }
+
+      using (_Connection)
+      {
+        _Connection.Open();
+
+        string checkIfExistsQuery = $"SELECT COUNT(*) FROM habit WHERE name='{name}'";
+
+        using (SqliteCommand checkCommand = new SqliteCommand(checkIfExistsQuery, _Connection))
+        {
+          int matchingHabits = Convert.ToInt32(checkCommand.ExecuteScalar());
+
+          if (matchingHabits > 0)
+          {
+            Console.WriteLine("\nThat habit already exists. Press any key to return to Main Menu.\n");
+            Console.ReadKey();
+            _Connection.Close();
+            return false;
+          }
+        }
+
+        string insertHabitQuery = $"INSERT INTO habit(name, unit) VALUES('{name}', '{unit}')";
+
+        using (SqliteCommand insertCommand = new SqliteCommand(insertHabitQuery, _Connection))
+        {
+          insertCommand.ExecuteNonQuery();
+        }
+
+        _Connection.Close();
+        Console.Clear();
+        Console.WriteLine($"\n{name} habit has been created. Press any key to return to Main Menu.\n");
+        Console.ReadKey();
+        return true;
+      }
+    }
+
     private void CreateTables()
     {
       using (_Connection)

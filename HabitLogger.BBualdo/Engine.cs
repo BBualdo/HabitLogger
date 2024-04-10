@@ -1,4 +1,6 @@
-﻿namespace DatabaseLibrary
+﻿using DatabaseLibrary;
+
+namespace HabitLogger.BBualdo
 {
   internal class Engine
   {
@@ -30,10 +32,10 @@
 
 Type number and press Enter:");
 
-      GetUserInput();
+      SelectOption();
     }
 
-    public void GetUserInput()
+    public void SelectOption()
     {
       int menuOption;
       string? userInput = Console.ReadLine();
@@ -50,7 +52,7 @@ Type number and press Enter:");
           Console.WriteLine("\nSee you soon! Keep working on your habits!\n");
           IsOn = false; break;
         case 1:
-          // Create Habit
+          db.CreateHabit();
           break;
         case 2:
           // Get all records
