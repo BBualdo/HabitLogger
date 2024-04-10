@@ -55,7 +55,7 @@ Type number and press Enter:");
           db.CreateHabit();
           break;
         case 2:
-          // Get all records
+          db.GetAllRecords();
           break;
         case 3:
           // Insert record

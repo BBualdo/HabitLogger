@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using DatabaseLibrary.Models;
+using Microsoft.Data.Sqlite;
 
 namespace DatabaseLibrary
 {
@@ -69,6 +70,14 @@ namespace DatabaseLibrary
       }
     }
 
+    public void GetAllRecords()
+    {
+      Console.Clear();
+      GetAllHabits();
+      Console.ReadKey();
+    }
+
+    // Private methods
     private void CreateTables()
     {
       using (_Connection)
@@ -184,6 +193,54 @@ namespace DatabaseLibrary
         }
         Console.Clear();
         _Connection.Close();
+      }
+    }
+
+    private List<Habit>? GetAllHabits()
+    {
+      using (_Connection)
+      {
+        _Connection.Open();
+
+        List<Habit> habits = new List<Habit>();
+
+        string selectAllHabitsQuery = "SELECT * FROM habit";
+
+        using (SqliteCommand selectAllCommand = new SqliteCommand(selectAllHabitsQuery, _Connection))
+        {
+          using (SqliteDataReader reader = selectAllCommand.ExecuteReader())
+          {
+            if (!reader.HasRows)
+            {
+              _Connection.Close();
+              Console.WriteLine("Habits list is empty. Create one first. Press any key to return to Main Menu.\n");
+              Console.ReadKey();
+              return null;
+            }
+
+            while (reader.Read())
+            {
+              int id = reader.GetInt32(0);
+              string name = reader.GetString(1);
+              string unit = reader.GetString(2);
+
+              habits.Add(new Habit(id, name, unit));
+            }
+          }
+        }
+
+        _Connection.Close();
+
+        Console.WriteLine("Choose a habit to see it's records.\n");
+
+        foreach (Habit habit in habits)
+        {
+          Console.WriteLine($"{habit.Id} - {habit.Name} ({habit.Unit})");
+        }
+
+        Console.WriteLine("");
+
+        return habits;
       }
     }
   }
