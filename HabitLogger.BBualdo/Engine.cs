@@ -61,7 +61,7 @@ Type number and press Enter:");
           db.InsertRecord();
           break;
         case 4:
-          // Update record
+          db.UpdateRecord();
           break;
         case 5:
           // Delete record

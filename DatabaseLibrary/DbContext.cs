@@ -78,23 +78,7 @@ namespace DatabaseLibrary
 
       if (habits == null) return false;
 
-      int habitId;
-      string? userInput = Console.ReadLine();
-
-      while (!int.TryParse(userInput, out habitId))
-      {
-        Console.WriteLine("\nInvalid input.");
-        userInput = Console.ReadLine();
-      }
-
-      Habit? choosenHabit = habits.FirstOrDefault(habit => habit.Id == habitId);
-
-      while (choosenHabit == null)
-      {
-        Console.WriteLine("\nThere is no habit with given number. Press any key to try again.");
-        Console.ReadKey();
-        GetAllRecords();
-      }
+      Habit choosenHabit = GetHabit(habits);
 
       List<Record>? records = GetRecordsForHabit(choosenHabit);
 
@@ -119,23 +103,7 @@ namespace DatabaseLibrary
 
       if (habits == null) return false;
 
-      int habitId;
-      string? userInput = Console.ReadLine();
-
-      while (!int.TryParse(userInput, out habitId))
-      {
-        Console.WriteLine("\nInvalid input.");
-        userInput = Console.ReadLine();
-      }
-
-      Habit? choosenHabit = habits.FirstOrDefault(habit => habit.Id == habitId);
-
-      while (choosenHabit == null)
-      {
-        Console.WriteLine("\nThere is no habit with given number. Press any key to try again.");
-        Console.ReadKey();
-        InsertRecord();
-      }
+      Habit choosenHabit = GetHabit(habits);
 
       string? date = GetDateInput();
       if (date == null) return false;
@@ -157,6 +125,41 @@ namespace DatabaseLibrary
       }
 
       Console.WriteLine($"\nRecord inserted into {choosenHabit.Name} successfully. Press any key to return to Main Menu.");
+      Console.ReadKey();
+      return true;
+    }
+
+    public bool UpdateRecord()
+    {
+      Console.Clear();
+
+      List<Habit>? habits = GetAllHabits();
+
+      if (habits == null) return false;
+
+      Habit choosenHabit = GetHabit(habits);
+
+      List<Record>? records = GetRecordsForHabit(choosenHabit);
+
+      if (records == null) return false;
+
+      Console.WriteLine("---------------------------------------------------");
+      foreach (Record record in records)
+      {
+        Console.WriteLine($"No.{record.Id}  - Date: {record.Date:dd-MMMM-yyyy}  - Quantity: {record.Quantity}");
+        Console.WriteLine("---------------------------------------------------");
+      }
+
+      int? recordId = GetRecordId();
+      if (recordId == null) return false;
+      string? date = GetDateInput();
+      if (date == null) return false;
+      int? quantity = GetQuantityInput(choosenHabit);
+      if (quantity == null) return false;
+
+      UpdateRecordById(recordId, choosenHabit.Id, date, quantity);
+
+      Console.WriteLine($"\nUpdating record for {choosenHabit.Name} completed. Press any key to return to Main Menu.");
       Console.ReadKey();
       return true;
     }
@@ -328,6 +331,29 @@ namespace DatabaseLibrary
       }
     }
 
+    private Habit GetHabit(List<Habit> habits)
+    {
+      int habitId;
+      string? userInput = Console.ReadLine();
+
+      while (!int.TryParse(userInput, out habitId))
+      {
+        Console.WriteLine("\nInvalid input.");
+        userInput = Console.ReadLine();
+      }
+
+      Habit? choosenHabit = habits.FirstOrDefault(habit => habit.Id == habitId);
+
+      while (choosenHabit == null)
+      {
+        Console.WriteLine("\nThere is no habit with given number. Press any key to try again.");
+        Console.ReadKey();
+        GetHabit(habits);
+      }
+
+      return choosenHabit;
+    }
+
     private List<Record>? GetRecordsForHabit(Habit habit)
     {
       Console.Clear();
@@ -402,6 +428,55 @@ namespace DatabaseLibrary
       if (quantity == 0) return null;
 
       return quantity;
+    }
+
+    private int? GetRecordId()
+    {
+      int recordId;
+      string? userInput = Console.ReadLine();
+
+      while (!int.TryParse(userInput, out recordId) || recordId < 0)
+      {
+        Console.WriteLine("\nInvalid input. Try again or type 0 to return to Main Menu.\n");
+        userInput = Console.ReadLine();
+      }
+
+      if (recordId == 0) return null;
+
+      return recordId;
+    }
+
+    private bool UpdateRecordById(int? record_id, int? habit_id, string date, int? quantity)
+    {
+      using (_Connection)
+      {
+        _Connection.Open();
+
+        string selectRecordQuery = $"SELECT EXISTS(SELECT 1 FROM record WHERE record_id={record_id} AND habit_id={habit_id})";
+
+        using (SqliteCommand selectCommand = new SqliteCommand(selectRecordQuery, _Connection))
+        {
+          int matchingRows = Convert.ToInt32(selectCommand.ExecuteScalar());
+
+          if (matchingRows == 0)
+          {
+            Console.WriteLine("Record doesn't exist. Press any key to try again.\n");
+            Console.ReadKey();
+            UpdateRecord();
+          }
+        }
+
+        string updateRecordQuery = $"UPDATE record SET date='{date}', quantity={quantity} WHERE record_id={record_id} AND habit_id={habit_id}";
+
+        using (SqliteCommand updateCommand = new SqliteCommand(updateRecordQuery, _Connection))
+        {
+          updateCommand.ExecuteNonQuery();
+        }
+
+        _Connection.Close();
+      }
+
+      return true;
     }
   }
 }
