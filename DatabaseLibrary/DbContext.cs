@@ -152,12 +152,8 @@ namespace DatabaseLibrary
 
       int? recordId = GetRecordId();
       if (recordId == null) return false;
-      string? date = GetDateInput();
-      if (date == null) return false;
-      int? quantity = GetQuantityInput(choosenHabit);
-      if (quantity == null) return false;
 
-      UpdateRecordById(recordId, choosenHabit.Id, date, quantity);
+      UpdateRecordById(recordId, choosenHabit);
 
       Console.WriteLine($"\nUpdating record for {choosenHabit.Name} completed. Press any key to return to Main Menu.");
       Console.ReadKey();
@@ -446,13 +442,13 @@ namespace DatabaseLibrary
       return recordId;
     }
 
-    private bool UpdateRecordById(int? record_id, int? habit_id, string date, int? quantity)
+    private bool UpdateRecordById(int? record_id, Habit choosenHabit)
     {
       using (_Connection)
       {
         _Connection.Open();
 
-        string selectRecordQuery = $"SELECT EXISTS(SELECT 1 FROM record WHERE record_id={record_id} AND habit_id={habit_id})";
+        string selectRecordQuery = $"SELECT EXISTS(SELECT 1 FROM record WHERE record_id={record_id} AND habit_id={choosenHabit.Id})";
 
         using (SqliteCommand selectCommand = new SqliteCommand(selectRecordQuery, _Connection))
         {
@@ -466,7 +462,12 @@ namespace DatabaseLibrary
           }
         }
 
-        string updateRecordQuery = $"UPDATE record SET date='{date}', quantity={quantity} WHERE record_id={record_id} AND habit_id={habit_id}";
+        string? date = GetDateInput();
+        if (date == null) return false;
+        int? quantity = GetQuantityInput(choosenHabit);
+        if (quantity == null) return false;
+
+        string updateRecordQuery = $"UPDATE record SET date='{date}', quantity={quantity} WHERE record_id={record_id} AND habit_id={choosenHabit.Id}";
 
         using (SqliteCommand updateCommand = new SqliteCommand(updateRecordQuery, _Connection))
         {
