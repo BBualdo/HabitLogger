@@ -189,6 +189,34 @@ namespace DatabaseLibrary
       return true;
     }
 
+    public bool DeleteHabit()
+    {
+      Console.Clear();
+
+      List<Habit>? habits = GetAllHabits();
+      if (habits == null) return false;
+
+      Habit? habitToDelete = GetHabit(habits);
+
+      using (_Connection)
+      {
+        _Connection.Open();
+
+        string deleteHabitQuery = $"DELETE FROM habit WHERE habit_id={habitToDelete.Id}";
+
+        using (SqliteCommand deleteCommand = new SqliteCommand(deleteHabitQuery, _Connection))
+        {
+          deleteCommand.ExecuteNonQuery();
+        }
+
+        _Connection.Close();
+
+        Console.WriteLine($"\nDeleting {habitToDelete.Name} habit completed. Press any key to return to Main Menu.");
+        Console.ReadKey();
+        return true;
+      }
+    }
+
     // Private methods
     private void CreateTables()
     {

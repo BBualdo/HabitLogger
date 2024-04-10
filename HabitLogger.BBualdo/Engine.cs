@@ -67,7 +67,7 @@ Type number and press Enter:");
           db.DeleteRecord();
           break;
         case 6:
-          // Delete habit
+          db.DeleteHabit();
           break;
         default:
           Console.WriteLine("Invalid input!");
