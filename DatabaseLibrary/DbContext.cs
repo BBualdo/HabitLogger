@@ -78,7 +78,9 @@ namespace DatabaseLibrary
 
       if (habits == null) return false;
 
-      Habit choosenHabit = GetHabit(habits);
+      Habit? choosenHabit = GetHabit(habits);
+
+      if (choosenHabit == null) return false;
 
       List<Record>? records = GetRecordsForHabit(choosenHabit);
 
@@ -103,7 +105,9 @@ namespace DatabaseLibrary
 
       if (habits == null) return false;
 
-      Habit choosenHabit = GetHabit(habits);
+      Habit? choosenHabit = GetHabit(habits);
+
+      if (choosenHabit == null) return false;
 
       string? date = GetDateInput();
       if (date == null) return false;
@@ -137,7 +141,9 @@ namespace DatabaseLibrary
 
       if (habits == null) return false;
 
-      Habit choosenHabit = GetHabit(habits);
+      Habit? choosenHabit = GetHabit(habits);
+
+      if (choosenHabit == null) return false;
 
       List<Record>? records = GetRecordsForHabit(choosenHabit);
 
@@ -167,7 +173,9 @@ namespace DatabaseLibrary
       List<Habit>? habits = GetAllHabits();
       if (habits == null) return false;
 
-      Habit choosenHabit = GetHabit(habits);
+      Habit? choosenHabit = GetHabit(habits);
+
+      if (choosenHabit == null) return false;
 
       List<Record>? records = GetRecordsForHabit(choosenHabit);
       if (records == null) return false;
@@ -197,6 +205,8 @@ namespace DatabaseLibrary
       if (habits == null) return false;
 
       Habit? habitToDelete = GetHabit(habits);
+
+      if (habitToDelete == null) return false;
 
       using (_Connection)
       {
@@ -316,7 +326,7 @@ namespace DatabaseLibrary
                   for (int i = 0; i < 5; i++)
                   {
                     Random random = new Random();
-                    string date = DateTime.Now.AddDays(-random.Next(1, 365)).ToString("dd-mm-yy");
+                    string date = DateTime.Now.AddDays(-random.Next(1, 365)).ToString("dd-MM-yy");
                     int quantity = random.Next(1, 10);
 
                     string insertRecordQuery = $"INSERT INTO record(habit_id, date, quantity) VALUES({habitID}, '{date}', {quantity})";
@@ -384,7 +394,7 @@ namespace DatabaseLibrary
       }
     }
 
-    private Habit GetHabit(List<Habit> habits)
+    private Habit? GetHabit(List<Habit> habits)
     {
       int habitId;
       string? userInput = Console.ReadLine();
@@ -399,9 +409,9 @@ namespace DatabaseLibrary
 
       while (choosenHabit == null)
       {
-        Console.WriteLine("\nThere is no habit with given number. Press any key to try again.");
+        Console.WriteLine("\nThere is no habit with given number. Press any key to return to Main Menu.");
         Console.ReadKey();
-        GetHabit(habits);
+        return null;
       }
 
       return choosenHabit;
