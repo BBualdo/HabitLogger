@@ -227,7 +227,54 @@ namespace DatabaseLibrary
       }
     }
 
-    // Private methods
+    public bool GetSummary()
+    {
+      Console.Clear();
+
+      List<Habit>? habits = GetAllHabits();
+      if (habits == null) return false;
+      Habit? choosenHabit = GetHabit(habits);
+      if (choosenHabit == null) return false;
+
+      using (_Connection)
+      {
+        _Connection.Open();
+
+        string sumQuery = @$"
+                    SELECT habit.name, habit.unit, SUM(record.quantity) AS total_quantity
+                    FROM habit
+                    JOIN record ON habit.habit_id=record.habit_id
+                    WHERE habit.name='{choosenHabit.Name}'
+                    GROUP BY habit.name, habit.unit";
+
+        using (SqliteCommand command = new SqliteCommand(sumQuery, _Connection))
+        {
+          using (SqliteDataReader reader = command.ExecuteReader())
+          {
+            if (reader.Read())
+            {
+              string habitName = reader.GetString(0);
+              string unit = reader.GetString(1);
+              int totalQuantity = reader.GetInt32(2);
+
+              Console.WriteLine($"\nYou were {habitName} {totalQuantity} {unit}.");
+            }
+            else
+            {
+              Console.WriteLine("\nNo records found for the specified habit.");
+            }
+          }
+        }
+
+        _Connection.Close();
+      }
+
+      Console.WriteLine("\nPress any key to return to Main Menu.");
+      Console.ReadKey();
+      return true;
+    }
+
+    #region Private Methods
     private void CreateTables()
     {
       using (_Connection)
@@ -579,5 +626,6 @@ namespace DatabaseLibrary
 
       return true;
     }
+    #endregion
   }
 }

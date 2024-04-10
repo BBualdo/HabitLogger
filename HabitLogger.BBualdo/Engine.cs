@@ -29,6 +29,7 @@ namespace HabitLogger.BBualdo
       4 - Update Record
       5 - Delete Record
       6 - Delete Habit
+      7 - Get Summary
 
 Type number and press Enter:");
 
@@ -68,6 +69,9 @@ Type number and press Enter:");
           break;
         case 6:
           db.DeleteHabit();
+          break;
+        case 7:
+          db.GetSummary();
           break;
         default:
           Console.WriteLine("Invalid input!");
