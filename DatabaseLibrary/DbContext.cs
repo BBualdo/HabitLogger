@@ -1,5 +1,6 @@
 ﻿using DatabaseLibrary.Models;
 using Microsoft.Data.Sqlite;
+using System.Globalization;
 
 namespace DatabaseLibrary
 {
@@ -70,11 +71,50 @@ namespace DatabaseLibrary
       }
     }
 
-    public void GetAllRecords()
+    public bool GetAllRecords()
     {
       Console.Clear();
-      GetAllHabits();
+      List<Habit>? habits = GetAllHabits();
+
+      if (habits == null) return false;
+
+      int habitId;
+      string? userInput = Console.ReadLine();
+
+      while (!int.TryParse(userInput, out habitId))
+      {
+        Console.WriteLine("\nInvalid input.");
+        userInput = Console.ReadLine();
+      }
+
+      Habit? choosenHabit = habits.FirstOrDefault(habit => habit.Id == habitId);
+
+      while (choosenHabit == null)
+      {
+        Console.WriteLine("\nThere is no habit with given number. Press any key to try again.");
+        Console.ReadKey();
+        GetAllRecords();
+      }
+
+      List<Record>? records = GetRecordsForHabit(choosenHabit);
+
+      if (records == null)
+      {
+        Console.WriteLine("There is no records yet. Press any key to return to Main Menu.\n");
+        Console.ReadKey();
+        return false;
+      }
+
+      Console.WriteLine("---------------------------------------------------");
+      foreach (Record record in records)
+      {
+        Console.WriteLine($"No.{record.Id}  - Date: {record.Date:dd-MMMM-yyyy}  - Quantity: {record.Quantity}");
+        Console.WriteLine("---------------------------------------------------");
+      }
+
+      Console.WriteLine("\nPress any key to return to Main Menu.");
       Console.ReadKey();
+      return true;
     }
 
     // Private methods
@@ -242,6 +282,45 @@ namespace DatabaseLibrary
 
         return habits;
       }
+    }
+
+    private List<Record>? GetRecordsForHabit(Habit habit)
+    {
+      Console.Clear();
+
+      List<Record> records = new List<Record>();
+
+      using (_Connection)
+      {
+        _Connection.Open();
+
+        string selectRecordsQuery = $"SELECT * FROM record WHERE habit_id={habit.Id}";
+
+        using (SqliteCommand selectCommand = new SqliteCommand(selectRecordsQuery, _Connection))
+        {
+          using (SqliteDataReader reader = selectCommand.ExecuteReader())
+          {
+            if (!reader.HasRows)
+            {
+              return null;
+            }
+
+            while (reader.Read())
+            {
+              int record_id = reader.GetInt32(0);
+              int habit_id = reader.GetInt32(1);
+              DateTime date = DateTime.ParseExact(reader.GetString(2), "dd-MM-yy", new CultureInfo("en-US"));
+              int quantity = reader.GetInt32(3);
+
+              records.Add(new Record(record_id, habit_id, date, quantity));
+            }
+          }
+        }
+
+        _Connection.Close();
+      }
+
+      return records;
     }
   }
 }
