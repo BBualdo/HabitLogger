@@ -1,10 +1,8 @@
 ﻿using DatabaseLibrary;
 
-DbContext db = new DbContext();
+Engine app = new Engine();
 
-Engine appEngine = new Engine();
-
-while (appEngine.IsOn)
+while (app.IsOn)
 {
-  appEngine.MainMenu();
+  app.MainMenu();
 }

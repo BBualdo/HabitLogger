@@ -2,7 +2,14 @@
 {
   internal class Engine
   {
-    public bool IsOn { get; set; } = true;
+    public bool IsOn { get; set; }
+    public DbContext db { get; set; }
+
+    public Engine()
+    {
+      IsOn = true;
+      db = new DbContext();
+    }
 
     public void MainMenu()
     {
