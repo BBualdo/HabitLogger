@@ -64,7 +64,7 @@ Type number and press Enter:");
           db.UpdateRecord();
           break;
         case 5:
-          // Delete record
+          db.DeleteRecord();
           break;
         case 6:
           // Delete habit

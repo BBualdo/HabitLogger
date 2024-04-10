@@ -160,6 +160,35 @@ namespace DatabaseLibrary
       return true;
     }
 
+    public bool DeleteRecord()
+    {
+      Console.Clear();
+
+      List<Habit>? habits = GetAllHabits();
+      if (habits == null) return false;
+
+      Habit choosenHabit = GetHabit(habits);
+
+      List<Record>? records = GetRecordsForHabit(choosenHabit);
+      if (records == null) return false;
+
+      Console.WriteLine("---------------------------------------------------");
+      foreach (Record record in records)
+      {
+        Console.WriteLine($"No.{record.Id}  - Date: {record.Date:dd-MMMM-yyyy}  - Quantity: {record.Quantity}");
+        Console.WriteLine("---------------------------------------------------");
+      }
+
+      int? recordId = GetRecordId();
+      if (recordId == null) return false;
+
+      DeleteRecordById(recordId, choosenHabit);
+
+      Console.WriteLine($"\nDeleting record for {choosenHabit.Name} completed. Press any key to return to Main Menu.");
+      Console.ReadKey();
+      return true;
+    }
+
     // Private methods
     private void CreateTables()
     {
@@ -442,13 +471,13 @@ namespace DatabaseLibrary
       return recordId;
     }
 
-    private bool UpdateRecordById(int? record_id, Habit choosenHabit)
+    private bool UpdateRecordById(int? record_id, Habit habit)
     {
       using (_Connection)
       {
         _Connection.Open();
 
-        string selectRecordQuery = $"SELECT EXISTS(SELECT 1 FROM record WHERE record_id={record_id} AND habit_id={choosenHabit.Id})";
+        string selectRecordQuery = $"SELECT EXISTS(SELECT 1 FROM record WHERE record_id={record_id} AND habit_id={habit.Id})";
 
         using (SqliteCommand selectCommand = new SqliteCommand(selectRecordQuery, _Connection))
         {
@@ -464,12 +493,45 @@ namespace DatabaseLibrary
 
         string? date = GetDateInput();
         if (date == null) return false;
-        int? quantity = GetQuantityInput(choosenHabit);
+        int? quantity = GetQuantityInput(habit);
         if (quantity == null) return false;
 
-        string updateRecordQuery = $"UPDATE record SET date='{date}', quantity={quantity} WHERE record_id={record_id} AND habit_id={choosenHabit.Id}";
+        string updateRecordQuery = $"UPDATE record SET date='{date}', quantity={quantity} WHERE record_id={record_id} AND habit_id={habit.Id}";
 
         using (SqliteCommand updateCommand = new SqliteCommand(updateRecordQuery, _Connection))
+        {
+          updateCommand.ExecuteNonQuery();
+        }
+
+        _Connection.Close();
+      }
+
+      return true;
+    }
+
+    private bool DeleteRecordById(int? record_id, Habit habit)
+    {
+      using (_Connection)
+      {
+        _Connection.Open();
+
+        string selectRecordQuery = $"SELECT EXISTS(SELECT 1 FROM record WHERE record_id={record_id} AND habit_id={habit.Id})";
+
+        using (SqliteCommand selectCommand = new SqliteCommand(selectRecordQuery, _Connection))
+        {
+          int matchingRows = Convert.ToInt32(selectCommand.ExecuteScalar());
+
+          if (matchingRows == 0)
+          {
+            Console.WriteLine("Record doesn't exist. Press any key to try again.\n");
+            Console.ReadKey();
+            DeleteRecord();
+          }
+        }
+
+        string deleteRecordQuery = $"DELETE FROM record WHERE record_id={record_id} AND habit_id={habit.Id}";
+
+        using (SqliteCommand updateCommand = new SqliteCommand(deleteRecordQuery, _Connection))
         {
           updateCommand.ExecuteNonQuery();
         }
