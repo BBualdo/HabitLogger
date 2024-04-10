@@ -58,7 +58,7 @@ Type number and press Enter:");
           db.GetAllRecords();
           break;
         case 3:
-          // Insert record
+          db.InsertRecord();
           break;
         case 4:
           // Update record

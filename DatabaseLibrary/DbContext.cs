@@ -98,12 +98,7 @@ namespace DatabaseLibrary
 
       List<Record>? records = GetRecordsForHabit(choosenHabit);
 
-      if (records == null)
-      {
-        Console.WriteLine("There is no records yet. Press any key to return to Main Menu.\n");
-        Console.ReadKey();
-        return false;
-      }
+      if (records == null) return false;
 
       Console.WriteLine("---------------------------------------------------");
       foreach (Record record in records)
@@ -113,6 +108,55 @@ namespace DatabaseLibrary
       }
 
       Console.WriteLine("\nPress any key to return to Main Menu.");
+      Console.ReadKey();
+      return true;
+    }
+
+    public bool InsertRecord()
+    {
+      Console.Clear();
+      List<Habit>? habits = GetAllHabits();
+
+      if (habits == null) return false;
+
+      int habitId;
+      string? userInput = Console.ReadLine();
+
+      while (!int.TryParse(userInput, out habitId))
+      {
+        Console.WriteLine("\nInvalid input.");
+        userInput = Console.ReadLine();
+      }
+
+      Habit? choosenHabit = habits.FirstOrDefault(habit => habit.Id == habitId);
+
+      while (choosenHabit == null)
+      {
+        Console.WriteLine("\nThere is no habit with given number. Press any key to try again.");
+        Console.ReadKey();
+        InsertRecord();
+      }
+
+      string? date = GetDateInput();
+      if (date == null) return false;
+      int? quantity = GetQuantityInput(choosenHabit);
+      if (quantity == null) return false;
+
+      using (_Connection)
+      {
+        _Connection.Open();
+
+        string insertRecordQuery = $"INSERT INTO record(habit_id, date, quantity) VALUES({choosenHabit.Id}, '{date}', {quantity})";
+
+        using (SqliteCommand insertCommand = new SqliteCommand(insertRecordQuery, _Connection))
+        {
+          insertCommand.ExecuteNonQuery();
+        }
+
+        _Connection.Close();
+      }
+
+      Console.WriteLine($"\nRecord inserted into {choosenHabit.Name} successfully. Press any key to return to Main Menu.");
       Console.ReadKey();
       return true;
     }
@@ -271,7 +315,7 @@ namespace DatabaseLibrary
 
         _Connection.Close();
 
-        Console.WriteLine("Choose a habit to see it's records.\n");
+        Console.WriteLine("Choose a habit to interact with:\n");
 
         foreach (Habit habit in habits)
         {
@@ -302,6 +346,8 @@ namespace DatabaseLibrary
           {
             if (!reader.HasRows)
             {
+              Console.WriteLine("There is no records yet. Press any key to return to Main Menu.\n");
+              Console.ReadKey();
               return null;
             }
 
@@ -321,6 +367,41 @@ namespace DatabaseLibrary
       }
 
       return records;
+    }
+
+    private string? GetDateInput()
+    {
+      Console.Clear();
+      Console.WriteLine("Enter date for the record (Format: dd-mm-yy). Type 0 to return to Main Menu.\n");
+      string? userInput = Console.ReadLine();
+
+      while (!DateTime.TryParseExact(userInput, "dd-MM-yy", new CultureInfo("en-US"), DateTimeStyles.None, out _))
+      {
+        if (userInput == "0") return null;
+
+        Console.WriteLine("\nInvalid date. Please enter date in format (dd-mm-yy). Type 0 to return to Main Menu.\n");
+        userInput = Console.ReadLine();
+      }
+
+      return userInput;
+    }
+
+    private int? GetQuantityInput(Habit choosenHabit)
+    {
+      Console.Clear();
+      Console.WriteLine($"Enter quantity of {choosenHabit.Unit}. Type 0 to return to Main Menu.\n");
+      int quantity;
+      string? userInput = Console.ReadLine();
+
+      while (!int.TryParse(userInput, out quantity) || quantity < 0)
+      {
+        Console.WriteLine("\nInvalid quantity. Try again or type 0 to return to Main Menu.\n");
+        userInput = Console.ReadLine();
+      }
+
+      if (quantity == 0) return null;
+
+      return quantity;
     }
   }
 }
